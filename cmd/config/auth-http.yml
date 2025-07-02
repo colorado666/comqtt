@@ -1,9 +1,9 @@
-auth-mode: 1  # 0 Anonymous, 1 Username, 2 ClientID
+auth-mode: 2  # 0 Anonymous, 1 Username, 2 ClientID
 acl-mode: 2  # 0 Anonymous, 1 Username, 2 ClientID
 tls-enable: false #true(https) or false(http)
 tls-cert:
 tls-key:
 method: post  #get or post
 content-type: application/json  # application/json、 application/x-www-form-urlencoded
-auth-url: http://localhost:8080/comqtt/auth
-acl-url: http://localhost:8080/comqtt/acl
+auth-url: http://localhost:8200/api/mqtt/auth
+acl-url: http://localhost:8200/api/mqtt/acl
