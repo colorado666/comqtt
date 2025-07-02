@@ -142,7 +142,7 @@ func (a *Auth) OnACLCheck(cl *mqtt.Client, topic string, write bool) bool {
 	payload["address"] = address
 	payload["topic"] = topic
 	bytesData, _ := json.Marshal(payload)
-	resp, err = http.Post(a.config.AuthUrl, TypeJson, bytes.NewBuffer(bytesData))
+	resp, err = http.Post(a.config.AclUrl, TypeJson, bytes.NewBuffer(bytesData))
 
 	if err != nil {
 		return false
