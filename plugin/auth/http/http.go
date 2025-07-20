@@ -98,14 +98,17 @@ func (a *Auth) OnConnectAuthenticate(cl *mqtt.Client, pk packets.Packet) bool {
 	payload["peer_host"] = address
 	bytesData, _ := json.Marshal(payload)
 	resp, err = http.Post(a.config.AuthUrl, TypeJson, bytes.NewBuffer(bytesData))
-
 	if err != nil {
+		return false
+	}
+	if resp.StatusCode != 200 {
 		return false
 	}
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return false
 	}
+
 	var ra respAuth
 	err = json.Unmarshal(body, &ra)
 	if err != nil {
@@ -152,18 +155,30 @@ func (a *Auth) OnACLCheck(cl *mqtt.Client, topic string, write bool) bool {
 	username := string(cl.Properties.Username)
 	address := cl.Net.Remote
 
+	var action string
+	if write {
+		action = "publish"
+	} else {
+		action = "subscribe"
+	}
+
 	// 默认 post 操作，json 格式
 	payload := make(map[string]string)
 	payload["username"] = username
 	payload["client_id"] = clientID
 	payload["peer_host"] = address
 	payload["topic"] = topic
+	payload["action"] = action
 	bytesData, _ := json.Marshal(payload)
 	resp, err = http.Post(a.config.AclUrl, TypeJson, bytes.NewBuffer(bytesData))
-
 	if err != nil {
 		return false
 	}
+
+	if resp.StatusCode != 200 {
+		return false
+	}
+
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return false
