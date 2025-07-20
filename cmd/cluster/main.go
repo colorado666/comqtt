@@ -8,7 +8,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	csRt "github.com/wind-c/comqtt/v2/cluster/rest"
 	"maps"
 	"net"
 	"net/http"
@@ -19,6 +18,8 @@ import (
 	"strings"
 	"syscall"
 
+	csRt "github.com/wind-c/comqtt/v2/cluster/rest"
+
 	"github.com/redis/go-redis/v9"
 	cs "github.com/wind-c/comqtt/v2/cluster"
 	"github.com/wind-c/comqtt/v2/cluster/log"
@@ -26,6 +27,7 @@ import (
 	"github.com/wind-c/comqtt/v2/config"
 	mqtt "github.com/wind-c/comqtt/v2/mqtt"
 	"github.com/wind-c/comqtt/v2/mqtt/hooks/auth"
+	"github.com/wind-c/comqtt/v2/mqtt/hooks/events"
 	"github.com/wind-c/comqtt/v2/mqtt/listeners"
 	mqttRt "github.com/wind-c/comqtt/v2/mqtt/rest"
 	"github.com/wind-c/comqtt/v2/plugin"
@@ -113,6 +115,7 @@ func realMain(ctx context.Context) error {
 	initStorage(server, cfg)
 	initAuth(server, cfg)
 	initBridge(server, cfg)
+	initDeviceEvents(server, cfg)
 
 	// init node and bind mqtt server
 	if cfg.Cluster.Members == nil {
@@ -231,6 +234,20 @@ func initBridge(server *mqtt.Server, conf *config.Config) {
 		onError(plugin.LoadYaml(conf.BridgePath, &opts), logMsg)
 		onError(server.AddHook(new(cokafka.Bridge), &opts), logMsg)
 	}
+}
+
+func initDeviceEvents(server *mqtt.Server, conf *config.Config) {
+	logMsg := "init device events"
+
+	// Configure device events hook for cluster mode
+	config := &events.Options{
+		NodeName: conf.Cluster.NodeName,
+	}
+
+	hook := new(events.DeviceEventsHook)
+	hook.SetServer(server)
+
+	onError(server.AddHook(hook, config), logMsg)
 }
 
 func initClusterNode(server *mqtt.Server, conf *config.Config) {

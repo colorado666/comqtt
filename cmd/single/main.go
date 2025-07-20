@@ -19,6 +19,7 @@ import (
 	"github.com/wind-c/comqtt/v2/config"
 	"github.com/wind-c/comqtt/v2/mqtt"
 	"github.com/wind-c/comqtt/v2/mqtt/hooks/auth"
+	"github.com/wind-c/comqtt/v2/mqtt/hooks/events"
 	"github.com/wind-c/comqtt/v2/mqtt/hooks/storage/badger"
 	"github.com/wind-c/comqtt/v2/mqtt/hooks/storage/bolt"
 	"github.com/wind-c/comqtt/v2/mqtt/hooks/storage/redis"
@@ -88,6 +89,7 @@ func realMain(ctx context.Context) error {
 	initStorage(server, cfg)
 	initAuth(server, cfg)
 	initBridge(server, cfg)
+	initDeviceEvents(server, cfg)
 
 	// gen tls config
 	var listenerConfig *listeners.Config
@@ -196,6 +198,20 @@ func initBridge(server *mqtt.Server, conf *config.Config) {
 		onError(plugin.LoadYaml(conf.BridgePath, &opts), logMsg)
 		onError(server.AddHook(new(cokafka.Bridge), &opts), logMsg)
 	}
+}
+
+func initDeviceEvents(server *mqtt.Server, conf *config.Config) {
+	logMsg := "init device events"
+
+	// Configure device events hook for single mode
+	config := &events.Options{
+		NodeName: "single",
+	}
+
+	hook := new(events.DeviceEventsHook)
+	hook.SetServer(server)
+
+	onError(server.AddHook(hook, config), logMsg)
 }
 
 // onError handle errors and simplify code

@@ -1,0 +1,17 @@
+# Device Events Hook Configuration
+# This configuration file shows how to configure the device events hook
+
+# Node name for topic construction
+# In single mode: use "single"
+# In cluster mode: use the actual node name (e.g., "cluster-node-01")
+node-name: "single"
+
+# Auto-detect node name from environment
+# When true, the hook will try to detect if running in cluster mode
+# and use appropriate node name
+auto-detect: true
+
+# Whether to retain event messages
+# false: Events are not retained (recommended for real-time monitoring)
+# true: Events are retained (useful for getting last known state)
+retain-events: false
