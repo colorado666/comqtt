@@ -37,6 +37,10 @@ type Auth struct {
 	config *Options
 }
 
+type respAuth struct {
+	Result string `json:"result"`
+}
+
 // ID returns the ID of the hook.
 func (a *Auth) ID() string {
 	return "auth-http"
@@ -91,7 +95,7 @@ func (a *Auth) OnConnectAuthenticate(cl *mqtt.Client, pk packets.Packet) bool {
 	payload["username"] = username
 	payload["password"] = password
 	payload["client_id"] = clientID
-	payload["address"] = address
+	payload["peer_host"] = address
 	bytesData, _ := json.Marshal(payload)
 	resp, err = http.Post(a.config.AuthUrl, TypeJson, bytes.NewBuffer(bytesData))
 
@@ -102,13 +106,26 @@ func (a *Auth) OnConnectAuthenticate(cl *mqtt.Client, pk packets.Packet) bool {
 	if err != nil {
 		return false
 	}
-	if string(body) == "1" {
+	var ra respAuth
+	err = json.Unmarshal(body, &ra)
+	if err != nil {
+		return false
+	}
+	if ra.Result == "allow" {
 		fmt.Println("auth success")
 		return true
 	} else {
 		fmt.Println("auth failed")
 		return false
 	}
+
+	// if string(body) == "1" {
+	// 	fmt.Println("auth success")
+	// 	return true
+	// } else {
+	// 	fmt.Println("auth failed")
+	// 	return false
+	// }
 }
 
 // OnACLCheck returns true if the connecting client has matching read or write access to subscribe
@@ -139,7 +156,7 @@ func (a *Auth) OnACLCheck(cl *mqtt.Client, topic string, write bool) bool {
 	payload := make(map[string]string)
 	payload["username"] = username
 	payload["client_id"] = clientID
-	payload["address"] = address
+	payload["peer_host"] = address
 	payload["topic"] = topic
 	bytesData, _ := json.Marshal(payload)
 	resp, err = http.Post(a.config.AclUrl, TypeJson, bytes.NewBuffer(bytesData))
@@ -151,11 +168,25 @@ func (a *Auth) OnACLCheck(cl *mqtt.Client, topic string, write bool) bool {
 	if err != nil {
 		return false
 	}
-	if string(body) == "1" {
+
+	var ra respAuth
+	err = json.Unmarshal(body, &ra)
+	if err != nil {
+		return false
+	}
+	if ra.Result == "allow" {
 		fmt.Println("auth success")
 		return true
 	} else {
 		fmt.Println("auth failed")
 		return false
 	}
+
+	// if string(body) == "1" {
+	// 	fmt.Println("auth success")
+	// 	return true
+	// } else {
+	// 	fmt.Println("auth failed")
+	// 	return false
+	// }
 }
