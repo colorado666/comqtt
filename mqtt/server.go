@@ -1467,8 +1467,16 @@ func (s *Server) publishSysTopics() {
 // Close attempts to gracefully shut down the server, all listeners, clients, and stores.
 func (s *Server) Close() error {
 	close(s.done)
-	s.Listeners.CloseAll(s.closeListenerClients)
+
+	// Notify hooks that server is stopping, but keep them active
 	s.hooks.OnStopped()
+
+	// Close all listeners and clients (this will trigger OnDisconnect callbacks)
+	// Hooks are still active at this point, so database operations will work
+	s.Listeners.CloseAll(s.closeListenerClients)
+
+	// Now that all clients are disconnected and their data is persisted,
+	// we can safely stop the hooks (including closing the database)
 	s.hooks.Stop()
 
 	s.Log.Info("comqtt server stopped")

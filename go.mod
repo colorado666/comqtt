@@ -2,8 +2,6 @@ module github.com/wind-c/comqtt/v2
 
 go 1.24
 
-toolchain go1.24.3
-
 require (
 	github.com/alicebob/miniredis/v2 v2.34.0
 	github.com/asdine/storm v2.1.2+incompatible
